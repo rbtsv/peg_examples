@@ -1,5 +1,5 @@
 # This file was generated from arithm_act.peg
-# See http://canopy.jcoglan.com/ for documentation.
+# See https://canopy.jcoglan.com/ for documentation
 
 from collections import defaultdict
 import re
@@ -36,10 +36,6 @@ class TreeNode3(TreeNode):
         self.prod = elements[2]
 
 
-class ParseError(SyntaxError):
-    pass
-
-
 FAILURE = object()
 
 
@@ -72,8 +68,8 @@ class Grammar(object):
             self._offset = cached[1]
             return cached[0]
         index1 = self._offset
-        remaining0, index2, elements0, address1 = 1, self._offset, [], True
-        while address1 is not FAILURE:
+        index2, elements0, address1 = self._offset, [], None
+        while True:
             chunk0, max0 = None, self._offset + 1
             if max0 <= self._input_size:
                 chunk0 = self._input[self._offset:max0]
@@ -86,11 +82,12 @@ class Grammar(object):
                     self._failure = self._offset
                     self._expected = []
                 if self._offset == self._failure:
-                    self._expected.append('[0-9]')
+                    self._expected.append(('Arithm::term', '[0-9]'))
             if address1 is not FAILURE:
                 elements0.append(address1)
-                remaining0 -= 1
-        if remaining0 <= 0:
+            else:
+                break
+        if len(elements0) >= 1:
             address0 = self._actions.make_number(self._input, index2, self._offset, elements0)
             self._offset = self._offset
         else:
@@ -111,7 +108,7 @@ class Grammar(object):
                     self._failure = self._offset
                     self._expected = []
                 if self._offset == self._failure:
-                    self._expected.append('"("')
+                    self._expected.append(('Arithm::term', '"("'))
             if address2 is not FAILURE:
                 elements1.append(address2)
                 address3 = FAILURE
@@ -131,7 +128,7 @@ class Grammar(object):
                             self._failure = self._offset
                             self._expected = []
                         if self._offset == self._failure:
-                            self._expected.append('")"')
+                            self._expected.append(('Arithm::term', '")"'))
                     if address4 is not FAILURE:
                         elements1.append(address4)
                     else:
@@ -177,7 +174,7 @@ class Grammar(object):
                     self._failure = self._offset
                     self._expected = []
                 if self._offset == self._failure:
-                    self._expected.append('"+"')
+                    self._expected.append(('Arithm::sum', '"+"'))
             if address2 is not FAILURE:
                 elements0.append(address2)
                 address3 = FAILURE
@@ -226,7 +223,7 @@ class Grammar(object):
                     self._failure = self._offset
                     self._expected = []
                 if self._offset == self._failure:
-                    self._expected.append('"*"')
+                    self._expected.append(('Arithm::prod', '"*"'))
             if address2 is not FAILURE:
                 elements0.append(address2)
                 address3 = FAILURE
@@ -273,21 +270,36 @@ class Parser(Grammar):
             return tree
         if not self._expected:
             self._failure = self._offset
-            self._expected.append('<EOF>')
+            self._expected.append(('Arithm', '<EOF>'))
         raise ParseError(format_error(self._input, self._failure, self._expected))
 
 
-def format_error(input, offset, expected):
-    lines, line_no, position = input.split('\n'), 0, 0
-    while position <= offset:
-        position += len(lines[line_no]) + 1
-        line_no += 1
-    message, line = 'Line ' + str(line_no) + ': expected ' + ', '.join(expected) + '\n', lines[line_no - 1]
-    message += line + '\n'
-    position -= len(line) + 1
-    message += ' ' * (offset - position)
-    return message + '^'
+class ParseError(SyntaxError):
+    pass
+
 
 def parse(input, actions=None, types=None):
     parser = Parser(input, actions, types)
     return parser.parse()
+
+def format_error(input, offset, expected):
+    lines = input.split('\n')
+    line_no, position = 0, 0
+
+    while position <= offset:
+        position += len(lines[line_no]) + 1
+        line_no += 1
+
+    line = lines[line_no - 1]
+    message = 'Line ' + str(line_no) + ': expected one of:\n\n'
+
+    for pair in expected:
+        message += '    - ' + pair[1] + ' from ' + pair[0] + '\n'
+
+    number = str(line_no)
+    while len(number) < 6:
+        number = ' ' + number
+
+    message += '\n' + number + ' | ' + line + '\n'
+    message += ' ' * (len(line) + 10 + offset - position)
+    return message + '^'

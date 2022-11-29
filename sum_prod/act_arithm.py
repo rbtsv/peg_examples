@@ -1,5 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import arithm_act
+
 
 class Actions:   
     def pass_1(self, input, start, end, elements):        
@@ -15,6 +16,6 @@ class Actions:
         return int(input[start:end], 10)
 
 
-res = arithm_act.parse("3+4*2".replace(" ", ""), 
+res = arithm_act.parse("(1+(1+2*5)*2+3)*2+13".replace(" ", ""), 
                         actions=Actions())
 print(res)

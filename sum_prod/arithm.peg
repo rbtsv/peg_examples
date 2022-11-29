@@ -1,5 +1,5 @@
 grammar Arithm
-  expr <- sum / prod / term 
+  expr <- sum / prod
   term <- [0-9]+ <NumNode> / "(" x:expr ")" <PassNode> 
   sum  <- x:prod "+" y:expr <PNode>
   prod <- x:term  "*" y:prod <MNode> / term
