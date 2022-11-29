@@ -55,9 +55,6 @@ class Grammar(object):
             address0 = self._read_prod()
             if address0 is FAILURE:
                 self._offset = index1
-                address0 = self._read_term()
-                if address0 is FAILURE:
-                    self._offset = index1
         self._cache['expr'][index0] = (address0, self._offset)
         return address0
 
